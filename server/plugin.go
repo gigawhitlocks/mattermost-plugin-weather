@@ -111,7 +111,7 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 		output = fmt.Sprintf("%s The wind is calm.", output)
 	}
 
-	output = fmt.Sprintf("%s Requested by @%s", output, user.Username)
+	output = fmt.Sprintf("%s Requested by @%s.", output, user.Username)
 
 	p.API.CreatePost(&model.Post{
 		Message:   output,
