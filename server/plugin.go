@@ -78,7 +78,6 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 			ChannelId: req.Args.ChannelId,
 			ParentId:  req.Args.ParentId,
 		})
-		p.API.LogError(err.Error())
 		return
 	}
 
@@ -89,14 +88,13 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 			ChannelId: req.Args.ChannelId,
 			ParentId:  req.Args.ParentId,
 		})
-		p.API.LogError("cc was nil")
 		return
 	}
 
 	output := fmt.Sprintf(
 		"**Current conditions for %s from %s:**\n\n%s and %s°F degrees", cc.Name, cc.Station, cc.Conditions, cc.Temperature)
 
-	if cc.PrecipitationLastHour > 0 {
+	if cc.PrecipitationLastHour > 0.009 {
 		output = fmt.Sprintf("%s with %.01f inches of precipitation in the last hour.", output, cc.PrecipitationLastHour)
 	} else {
 		output = fmt.Sprintf("%s.", output)
@@ -105,10 +103,10 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 	if cc.WindGust > 0 {
 		output = fmt.Sprintf("%s The wind gusted up to %.1f mph.", output, cc.WindGust)
 	} else {
-		output = fmt.Sprintf("%s The wind was calm.", output)
+		output = fmt.Sprintf("%s The wind is calm.", output)
 	}
 
-	_, err = p.API.CreatePost(&model.Post{
+	p.API.CreatePost(&model.Post{
 		Message:   output,
 		UserId:    p.botId,
 		ChannelId: req.Args.ChannelId,
