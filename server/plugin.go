@@ -97,7 +97,7 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 	}
 
 	output := fmt.Sprintf(
-		"@%s:\n**Current conditions for %s from %s:**\n\n%s and %s°F degrees", user.Username, cc.Name, cc.Station, cc.Conditions, cc.Temperature)
+		"**Current conditions for %s from %s:**\n\n%s and %s°F degrees", cc.Name, cc.Station, cc.Conditions, cc.Temperature)
 
 	if cc.PrecipitationLastHour > 0.009 {
 		output = fmt.Sprintf("%s with %.01f inches of precipitation in the last hour.", output, cc.PrecipitationLastHour)
@@ -110,6 +110,8 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 	} else {
 		output = fmt.Sprintf("%s The wind is calm.", output)
 	}
+
+	output = fmt.Sprintf("%s Requested by @%s", output, user.Username)
 
 	p.API.CreatePost(&model.Post{
 		Message:   output,
