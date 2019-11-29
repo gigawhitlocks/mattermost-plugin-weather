@@ -77,6 +77,12 @@ github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMo
 github.com/garyburd/redigo v1.6.0/go.mod h1:NR3MbYisc3/PwhQ00EMzDiPmrwpPxAn5GI05/YaO1SY=
 github.com/gernest/wow v0.1.0/go.mod h1:dEPabJRi5BneI1Nev1VWo0ZlcTWibHWp43qxKms4elY=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
+github.com/gigawhitlocks/weather v0.0.0-20190314171056-6d3737c3a6e0 h1:a65eRPKe6SU5v8XZuux+EQlla040tYBL0P2o3iL2THA=
+github.com/gigawhitlocks/weather v0.0.0-20190314171056-6d3737c3a6e0/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
+github.com/gigawhitlocks/weather v0.0.0-20191129034846-da1e381c9601 h1:ojcS3VrGbfJrjuwxb5lgiGSUHVQGOZFFZ/FnhZK0OaM=
+github.com/gigawhitlocks/weather v0.0.0-20191129034846-da1e381c9601/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
+github.com/gigawhitlocks/weather v0.0.0-20191129040124-15547264721d h1:+GpeyD9EJKbSF2Rvmk0l8KSlUsfJloI0a4dmEU9LWjo=
+github.com/gigawhitlocks/weather v0.0.0-20191129040124-15547264721d/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
 github.com/gliderlabs/ssh v0.1.1/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-gorp/gorp v2.0.0+incompatible h1:dIQPsBtl6/H1MjVseWuWPXa7ET4p6Dve4j3Hg+UjqYw=
 github.com/go-gorp/gorp v2.0.0+incompatible/go.mod h1:7IfkAQnO7jfT/9IQ3R9wL1dFhukN6aQxzKTHnkxzA/E=
@@ -111,6 +117,7 @@ github.com/gomodule/redigo v2.0.0+incompatible/go.mod h1:B4C85qUVwatsJoIUNIfCRsp
 github.com/google/btree v0.0.0-20180813153112-4030bb1f1f0c/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ5JPQ=
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
+github.com/google/go-cmp v0.3.0 h1:crn/baboCvb5fXaQ0IJ1SGTsTVrWpDsCWC8EGETZijY=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-github v17.0.0+incompatible/go.mod h1:zLgOLi98H3fifZn+44m+umXrS52loVEgC2AApnigrVQ=
 github.com/google/go-querystring v1.0.0/go.mod h1:odCYkC5MyYFN7vkCjXpyrEuKhc/BUO6wN/zVPAxq5ck=
