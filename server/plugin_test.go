@@ -1,27 +1,16 @@
 package main
 
 import (
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	"github.com/gigawhitlocks/weather/nws"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServeHTTP(t *testing.T) {
+func TestWeather(t *testing.T) {
 	assert := assert.New(t)
-	plugin := Plugin{}
-	w := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodGet, "/", nil)
-
-	plugin.ServeHTTP(nil, w, r)
-
-	result := w.Result()
-	assert.NotNil(result)
-	bodyBytes, err := ioutil.ReadAll(result.Body)
-	assert.Nil(err)
-	bodyString := string(bodyBytes)
-
-	assert.Equal("Hello, world!", bodyString)
+	r, err := nws.GetWeather("78703")
+	assert.NoError(err)
+	assert.NotNil(r)
+	assert.NotEqual("", r.String())
 }
