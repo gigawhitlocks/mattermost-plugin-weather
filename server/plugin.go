@@ -1,16 +1,17 @@
 package main
 
 import (
-	"github.com/mattermost/mattermost-server/model"
-	"github.com/mattermost/mattermost-server/plugin"
-
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"path/filepath"
 	"strings"
 	"sync"
+	"time"
 
-	"fmt"
 	"github.com/gigawhitlocks/weather/nws"
-	"io/ioutil"
-	"path/filepath"
+	"github.com/mattermost/mattermost-server/model"
+	"github.com/mattermost/mattermost-server/plugin"
 )
 
 // Plugin implements the interface expected by the Mattermost server to communicate between the server and plugin processes.
@@ -24,7 +25,8 @@ type Plugin struct {
 	// setConfiguration for usage.
 	configuration *configuration
 
-	botId string
+	botId        string
+	profileImage []byte
 }
 
 type WeatherRequest struct {
@@ -48,13 +50,13 @@ func (p *Plugin) OnActivate() (err error) {
 		return err
 	}
 
-	profileImage, err := ioutil.ReadFile(filepath.Join(bundlePath, "assets", "weather.png"))
+	p.profileImage, err = ioutil.ReadFile(filepath.Join(bundlePath, "assets", "weather.png"))
 	if err != nil {
 		p.API.LogError(fmt.Sprintf(err.Error(), "couldn't read profile image: %s"))
 		return err
 	}
 
-	appErr := p.API.SetProfileImage(p.botId, profileImage)
+	appErr := p.API.SetProfileImage(p.botId, p.profileImage)
 	if appErr != nil {
 		return appErr
 	}
@@ -69,12 +71,16 @@ func (p *Plugin) OnActivate() (err error) {
 	})
 }
 
+func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
+	w.Write(p.profileImage)
+}
+
 func (p *Plugin) postWeather(req *WeatherRequest) {
 	cc, err := nws.GetWeather(req.Zip)
 	if err != nil {
 		_ = p.API.SendEphemeralPost(req.Args.UserId, &model.Post{
 			Message:   fmt.Sprintf("Couldn't get weather because %s", err.Error()),
-			UserId:    req.Args.UserId,
+			UserId:    p.botId,
 			ChannelId: req.Args.ChannelId,
 			ParentId:  req.Args.ParentId,
 		})
@@ -84,7 +90,7 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 	if cc == nil {
 		_ = p.API.SendEphemeralPost(req.Args.UserId, &model.Post{
 			Message:   fmt.Sprintf("No conditions found for %s", req.Zip),
-			UserId:    req.Args.UserId,
+			UserId:    p.botId,
 			ChannelId: req.Args.ChannelId,
 			ParentId:  req.Args.ParentId,
 		})
@@ -133,9 +139,12 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		Args: args,
 	})
 
+	iconURL := fmt.Sprintf("%s/plugins/%s?weather.png", *p.API.GetConfig().ServiceSettings.SiteURL, manifest.ID)
+
 	return &model.CommandResponse{
 		ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL,
 		Username:     "weather",
 		Text:         fmt.Sprintf("Getting weather for %s", zip),
+		IconURL:      iconURL,
 	}, nil
 }
