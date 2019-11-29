@@ -91,8 +91,13 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 		return
 	}
 
+	user, _ := p.API.GetUser(req.Args.UserId)
+	if user == nil {
+		p.API.LogError("Couldn't find user!")
+	}
+
 	output := fmt.Sprintf(
-		"**Current conditions for %s from %s:**\n\n%s and %s°F degrees", cc.Name, cc.Station, cc.Conditions, cc.Temperature)
+		"@%s:\n**Current conditions for %s from %s:**\n\n%s and %s°F degrees", user.Username, cc.Name, cc.Station, cc.Conditions, cc.Temperature)
 
 	if cc.PrecipitationLastHour > 0.009 {
 		output = fmt.Sprintf("%s with %.01f inches of precipitation in the last hour.", output, cc.PrecipitationLastHour)
