@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/gigawhitlocks/weather/nws"
 	"github.com/mattermost/mattermost-server/model"
