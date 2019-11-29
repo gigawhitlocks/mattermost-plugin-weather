@@ -24,7 +24,6 @@ type Plugin struct {
 	// setConfiguration for usage.
 	configuration *configuration
 
-	queue chan *WeatherRequest
 	botId string
 }
 
@@ -52,14 +51,13 @@ func (p *Plugin) OnActivate() (err error) {
 	profileImage, err := ioutil.ReadFile(filepath.Join(bundlePath, "assets", "weather.png"))
 	if err != nil {
 		p.API.LogError(fmt.Sprintf(err.Error(), "couldn't read profile image: %s"))
+		return err
 	}
 
 	appErr := p.API.SetProfileImage(p.botId, profileImage)
 	if appErr != nil {
 		return appErr
 	}
-
-	go p.handleLookups()
 
 	// args.Command contains the full command string entered
 	return p.API.RegisterCommand(&model.Command{
@@ -71,20 +69,27 @@ func (p *Plugin) OnActivate() (err error) {
 	})
 }
 
-func (p *Plugin) handleLookups() {
-	p.queue = make(chan *WeatherRequest)
-	for {
-		select {
-		case req := <-p.queue:
-			p.postWeather(req)
-		}
-	}
-}
-
 func (p *Plugin) postWeather(req *WeatherRequest) {
 	cc, err := nws.GetWeather(req.Zip)
 	if err != nil {
+		_ = p.API.SendEphemeralPost(req.Args.UserId, &model.Post{
+			Message:   fmt.Sprintf("Couldn't get weather because %s", err.Error()),
+			UserId:    req.Args.UserId,
+			ChannelId: req.Args.ChannelId,
+			ParentId:  req.Args.ParentId,
+		})
 		p.API.LogError(err.Error())
+		return
+	}
+
+	if cc == nil {
+		_ = p.API.SendEphemeralPost(req.Args.UserId, &model.Post{
+			Message:   fmt.Sprintf("No conditions found for %s", req.Zip),
+			UserId:    req.Args.UserId,
+			ChannelId: req.Args.ChannelId,
+			ParentId:  req.Args.ParentId,
+		})
+		p.API.LogError("cc was nil")
 		return
 	}
 
@@ -92,7 +97,7 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 		"**Current conditions for %s from %s:**\n\n%s and %s°F degrees", cc.Name, cc.Station, cc.Conditions, cc.Temperature)
 
 	if cc.PrecipitationLastHour > 0 {
-		output = fmt.Sprintf("**%s** with %.01f inches of precipitation in the last hour.", output, cc.PrecipitationLastHour)
+		output = fmt.Sprintf("%s with %.01f inches of precipitation in the last hour.", output, cc.PrecipitationLastHour)
 	} else {
 		output = fmt.Sprintf("%s.", output)
 	}
@@ -110,11 +115,6 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 		ParentId:  req.Args.ParentId,
 	})
 
-	if err != nil {
-		p.API.LogError(err.Error())
-		return
-	}
-
 }
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
@@ -123,10 +123,10 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 		return nil, model.NewAppError("weather plugin", "error: only 5 digit zip codes are supported input", nil, "input wasn't length 5", 400)
 	}
 
-	p.queue <- &WeatherRequest{
+	go p.postWeather(&WeatherRequest{
 		Zip:  zip,
 		Args: args,
-	}
+	})
 
 	return &model.CommandResponse{
 		ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL,
