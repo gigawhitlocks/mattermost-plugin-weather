@@ -19,3 +19,8 @@ Download the `.tar.gz` from the [releases page](https://github.com/gigawhitlocks
 ## Configuration
 
 There is no available configuration.
+
+## Wishlist
+
+- Different data provider(s)
+- Geocoding so that you can query "City, State" or "City, Country" and get the local weather.
