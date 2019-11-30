@@ -143,7 +143,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	return &model.CommandResponse{
 		ResponseType: model.COMMAND_RESPONSE_TYPE_EPHEMERAL,
 		Username:     "weather",
-		Text:         fmt.Sprintf("Getting weather for %s", zip),
+		Text:         fmt.Sprintf("Weather for %s was requested.", zip),
 		IconURL:      iconURL,
 	}, nil
 }
