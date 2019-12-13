@@ -110,8 +110,8 @@ func (p *Plugin) postWeather(req *WeatherRequest) {
 		output = fmt.Sprintf("%s.", output)
 	}
 
-	if cc.WindGust > 0 {
-		output = fmt.Sprintf("%s The wind gusted up to %.1f mph.", output, cc.WindGust)
+	if cc.WindSpeed > 0 {
+		output = fmt.Sprintf("%s The average wind speed is %.1f mph.", output, cc.WindSpeed)
 	} else {
 		output = fmt.Sprintf("%s The wind is calm.", output)
 	}

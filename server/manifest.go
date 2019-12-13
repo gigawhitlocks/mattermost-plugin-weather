@@ -7,5 +7,5 @@ var manifest = struct {
 	Version string
 }{
 	ID:      "business.silly.weather",
-	Version: "1.2.1",
+	Version: "1.3.1",
 }
