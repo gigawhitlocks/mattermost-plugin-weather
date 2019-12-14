@@ -83,6 +83,10 @@ github.com/gigawhitlocks/weather v0.0.0-20191129034846-da1e381c9601 h1:ojcS3VrGb
 github.com/gigawhitlocks/weather v0.0.0-20191129034846-da1e381c9601/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
 github.com/gigawhitlocks/weather v0.0.0-20191129040124-15547264721d h1:+GpeyD9EJKbSF2Rvmk0l8KSlUsfJloI0a4dmEU9LWjo=
 github.com/gigawhitlocks/weather v0.0.0-20191129040124-15547264721d/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
+github.com/gigawhitlocks/weather v0.0.0-20191129200926-17ec1ff20863 h1:p/LMTyFfEoNvaM0xKsUbyWGngsXZ/bFktMlte3/jQQk=
+github.com/gigawhitlocks/weather v0.0.0-20191129200926-17ec1ff20863/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
+github.com/gigawhitlocks/weather v0.0.0-20191213033526-970eef307383 h1:tLnffqDM6MYQBMgnNlgP2kznQUn8Sa3qjAjhWM44unI=
+github.com/gigawhitlocks/weather v0.0.0-20191213033526-970eef307383/go.mod h1:t3Db8csAXPNoCXI0ZLWWB6wsvkOfViMoe/5cdhBwYOM=
 github.com/gliderlabs/ssh v0.1.1/go.mod h1:U7qILu1NlMHj9FlMhZLlkCdDnU1DBEAqr0aevW3Awn0=
 github.com/go-gorp/gorp v2.0.0+incompatible h1:dIQPsBtl6/H1MjVseWuWPXa7ET4p6Dve4j3Hg+UjqYw=
 github.com/go-gorp/gorp v2.0.0+incompatible/go.mod h1:7IfkAQnO7jfT/9IQ3R9wL1dFhukN6aQxzKTHnkxzA/E=
