@@ -2,7 +2,7 @@
     "id": "business.silly.weather",
     "name": "Weather Plugin",
     "description": "This plugin provides integration with the ClimaCell API to provide weather conditions",
-    "version": "2.0-rc1",
+    "version": "2.0",
     "min_server_version": "5.12.0",
     "server": {
 	"executables": {

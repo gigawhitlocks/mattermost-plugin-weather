@@ -66,7 +66,7 @@ func (p *Plugin) OnActivate() (err error) {
 		DisplayName:      "Weather",
 		Description:      "Gets the weather",
 		AutoComplete:     true,
-		AutoCompleteDesc: "/weather location",
+		AutoCompleteDesc: "Search for a location like \"1600 Pennsylvania Ave\", \"Miami\", \"Purdue University\", or even \"The Statue of Liberty\".",
 	})
 }
 
