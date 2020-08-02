@@ -76,16 +76,17 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	input := strings.TrimSpace(strings.TrimPrefix(args.Command, "/weather "))
-	iconURL := fmt.Sprintf("%s/plugins/%s?weather.png", *p.API.GetConfig().ServiceSettings.SiteURL, manifest.ID)
+	//iconURL := fmt.Sprintf("%s/plugins/%s?weather.png", *p.API.GetConfig().ServiceSettings.SiteURL, manifest.ID)
 	output, err := climacell.CurrentConditions(input)
 	if err != nil {
 		return nil, model.NewAppError("weather plugin", "current-conditions", nil, err.Error(), 500)
 	}
-
-	return &model.CommandResponse{
-		ResponseType: model.COMMAND_RESPONSE_TYPE_IN_CHANNEL,
-		Username:     "weather",
-		Text:         output,
-		IconURL:      iconURL,
-	}, nil
+	user, _ := p.API.GetUser(args.UserId)
+	go p.API.CreatePost(&model.Post{
+		Message:   fmt.Sprintf("%s\n@%s", output, user.Username),
+		UserId:    p.botId,
+		ChannelId: args.ChannelId,
+		ParentId:  args.ParentId,
+	})
+	return &model.CommandResponse{}, nil
 }
