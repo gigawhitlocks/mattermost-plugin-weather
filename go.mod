@@ -2,7 +2,7 @@ module github.com/gigawhitlocks/mattermost-plugin-weather
 
 go 1.14
 
-replace github.com/gigawhitlocks/weather => /home/ian/weather
+replace github.com/gigawhitlocks/weather => ../weather
 
 require (
 	github.com/gigawhitlocks/weather v0.0.0-00010101000000-000000000000
