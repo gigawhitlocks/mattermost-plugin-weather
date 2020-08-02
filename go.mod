@@ -1,12 +1,13 @@
-module github.com/mattermost/mattermost-plugin-starter-template
+module github.com/gigawhitlocks/mattermost-plugin-weather
 
-go 1.12
+go 1.14
+
+replace github.com/gigawhitlocks/weather => /home/ian/weather
 
 require (
-	github.com/blang/semver v3.6.1+incompatible // indirect
-	github.com/gigawhitlocks/weather v0.0.0-20191213033526-970eef307383
-	github.com/mattermost/mattermost-server v1.4.1-0.20191016162522-6597fdb40134 // Mattermost Server 5.16.0
+	github.com/gigawhitlocks/weather v0.0.0-00010101000000-000000000000
+	github.com/mattermost/mattermost-server/v5 v5.25.2
 	github.com/mholt/archiver/v3 v3.3.0
-	github.com/pkg/errors v0.8.1
-	github.com/stretchr/testify v1.3.0
+	github.com/pkg/errors v0.9.1
+	github.com/stretchr/testify v1.6.1
 )
