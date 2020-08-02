@@ -1,16 +1,13 @@
 # A Mattermost Weather Plugin
 ## Summary
-A very simple Mattermost plugin that will query the National Weather Service for the current conditions and enter them into chat. Currently US-only, sorry.
+A small Mattermost plugin that shows current weather data using the ClimaCell API for weather data and the OpenCageData API for geocoding.
 
-Also the NWS API is a little slow sometimes, but it's public and doesn't require an API key or anything like that, which simplifies distribution, installation, and configuration of the plugin.
+Set `WEATHER_KEY` and `GEOCODING_KEY` to your ClimaCell and OpenCageData API keys in the environment where Mattermost runs in order to use this plugin.
 
 Here is a brief demonstration of the plugin:
 
 ![An example of the plugin in use](./weather-demo.gif)
 
-Here is a demonstration of some feedback you get when things go wrong:
-
-![An example of some errors](./weather-demo-errors.gif)
 
 ## Installation
 
@@ -19,8 +16,3 @@ Download the `.tar.gz` from the [releases page](https://github.com/gigawhitlocks
 ## Configuration
 
 There is no available configuration.
-
-## Wishlist
-
-- Different data provider(s)
-- Geocoding so that you can query "City, State" or "City, Country" and get the local weather.
