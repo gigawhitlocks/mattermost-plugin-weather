@@ -83,7 +83,7 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 	user, _ := p.API.GetUser(args.UserId)
 	go p.API.CreatePost(&model.Post{
-		Message:   fmt.Sprintf("%s\n@%s", output, user.Username),
+		Message:   fmt.Sprintf("%s|Requested By|@%s|Query|\"%s\"|", output, user.Username, input),
 		UserId:    p.botId,
 		ChannelId: args.ChannelId,
 		ParentId:  args.ParentId,
