@@ -2,13 +2,11 @@
     "id": "business.silly.weather",
     "name": "Weather Plugin",
     "description": "This plugin provides integration with the ClimaCell API to provide weather conditions",
-    "version": "2.1",
-    "min_server_version": "5.12.0",
+    "version": "2.3",
+    "min_server_version": "5.21.0",
     "server": {
 	"executables": {
-	    "linux-amd64": "server/dist/plugin-linux-amd64",
-	    "darwin-amd64": "server/dist/plugin-darwin-amd64",
-	    "windows-amd64": "server/dist/plugin-windows-amd64.exe"
+	    "linux-amd64": "server/dist/plugin-linux-amd64"
 	}
     },
     "settings_schema": {
