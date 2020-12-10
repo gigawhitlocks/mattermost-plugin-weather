@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -83,8 +85,16 @@ func (p *Plugin) OnActivate() (err error) {
 	return err
 }
 
+// ServeHTTP handles HTTP requests to the plugin.
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
-	w.Write(p.profileImage)
+	w.Header().Set("Content-Type", "application/json")
+
+	switch path := r.URL.Path; path {
+	case "/profile.png":
+		p.handleProfileImage(w, r)
+	default:
+		http.NotFound(w, r)
+	}
 }
 
 var featureFlagPattern *regexp.Regexp = regexp.MustCompile(`-[a-zA-Z_]+`)
@@ -129,20 +139,78 @@ func (p *Plugin) getMap(c *plugin.Context, args *model.CommandArgs, input string
 }
 
 func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs, input string) (*model.CommandResponse, *model.AppError) {
-	output, err := climacell.CurrentConditions(input)
+	obsv, err := climacell.CurrentConditions(input)
 	if err != nil {
 		return nil, model.NewAppError("weather plugin", err.Error(), nil, err.Error(), 500)
 	}
-	user, _ := p.API.GetUser(args.UserId)
-	post := &model.Post{
-		Message:   fmt.Sprintf("%s|Requested By|@%s|Query|\"%s\"|", output, user.Username, input),
-		UserId:    p.botId,
-		ChannelId: args.ChannelId,
-		ParentId:  args.ParentId,
+
+	attachments := []*model.SlackAttachment{
+		{
+			Id:        0,
+			Title:     fmt.Sprintf("Weather For %s", obsv.ParsedLocation),
+			TitleLink: "",
+			Fields: []*model.SlackAttachmentField{
+				{
+					Title: "Conditions",
+					Value: fmt.Sprintf("%s", obsv.Title()),
+					Short: false,
+				},
+				{
+					Title: "Temperature",
+					Value: fmt.Sprintf("%.1f° %s", obsv.Temp.Value, obsv.Temp.Units),
+					Short: true,
+				},
+				{
+					Title: "Feels Like",
+					Value: fmt.Sprintf("%.1f° %s", obsv.FeelsLike.Value, obsv.FeelsLike.Units),
+					Short: true,
+				},
+				{
+					Title: "Type of Precipitation",
+					Value: fmt.Sprintf("%s", obsv.PrecipitationType.Value),
+					Short: true,
+				},
+				{
+					Title: "Amount of Precipitation",
+					Value: fmt.Sprintf("%.1f", obsv.Precipitation.Value),
+					Short: true,
+				},
+				{
+					Title: "Wind Gust",
+					Value: fmt.Sprintf("%.1f %s", obsv.WindGust.Value, obsv.WindGust.Units),
+					Short: true,
+				},
+				{
+					Title: "Barometric Pressure",
+					Value: fmt.Sprintf("%.1f %s", obsv.BaroPressure.Value, obsv.BaroPressure.Units),
+					Short: true,
+				},
+				{
+					Title: "Humidity",
+					Value: fmt.Sprintf("%.1f %s", obsv.Humidity.Value, obsv.Humidity.Units),
+					Short: true,
+				},
+				{
+					Title: "Cloud Cover",
+					Value: fmt.Sprintf("%.1f %s", obsv.CloudCover.Value, obsv.CloudCover.Units),
+					Short: true,
+				},
+			},
+		},
 	}
 
-	p.API.CreatePost(post)
-	return &model.CommandResponse{}, nil
+	if attachments[0].Fields[4].Value == "0.0" { // brittle but whatever
+		attachments[0].Fields = append(attachments[0].Fields[:3], attachments[0].Fields[5:]...)
+	}
+
+	return &model.CommandResponse{
+		ResponseType:   model.COMMAND_RESPONSE_TYPE_IN_CHANNEL,
+		Username:       "weather",
+		ChannelId:      args.ChannelId,
+		IconURL:        fmt.Sprintf("/plugins/%s/profile.png", manifest.ID),
+		Attachments:    attachments,
+		ExtraResponses: nil,
+	}, nil
 }
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	input := strings.TrimSpace(strings.TrimPrefix(args.Command, "/weather"))
@@ -152,4 +220,24 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	input = strings.TrimSpace(input)
 	return p.getCurrentConditions(c, args, input)
 
+}
+
+func (p *Plugin) handleProfileImage(w http.ResponseWriter, r *http.Request) {
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		p.API.LogError("Unable to get bundle path, err=" + err.Error())
+		return
+	}
+
+	img, err := os.Open(filepath.Join(bundlePath, "assets", "weather.png"))
+	if err != nil {
+		http.NotFound(w, r)
+		p.API.LogError("Unable to read profile image, err=" + err.Error())
+		return
+	}
+	defer img.Close()
+
+	w.Header().Set("Content-Type", "image/png")
+	io.Copy(w, img)
 }
