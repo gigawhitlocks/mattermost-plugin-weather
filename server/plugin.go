@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -83,8 +85,16 @@ func (p *Plugin) OnActivate() (err error) {
 	return err
 }
 
+// ServeHTTP handles HTTP requests to the plugin.
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
-	w.Write(p.profileImage)
+	w.Header().Set("Content-Type", "application/json")
+
+	switch path := r.URL.Path; path {
+	case "/profile.png":
+		p.handleProfileImage(w, r)
+	default:
+		http.NotFound(w, r)
+	}
 }
 
 var featureFlagPattern *regexp.Regexp = regexp.MustCompile(`-[a-zA-Z_]+`)
@@ -133,16 +143,38 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 	if err != nil {
 		return nil, model.NewAppError("weather plugin", err.Error(), nil, err.Error(), 500)
 	}
-	user, _ := p.API.GetUser(args.UserId)
-	post := &model.Post{
-		Message:   fmt.Sprintf("%s|Requested By|@%s|Query|\"%s\"|", output, user.Username, input),
-		UserId:    p.botId,
-		ChannelId: args.ChannelId,
-		ParentId:  args.ParentId,
+
+	bot, err := p.API.GetUser(p.botId)
+	if err != nil {
+		return nil, model.NewAppError("weather plugin", err.Error(), nil, err.Error(), 500)
 	}
 
-	p.API.CreatePost(post)
-	return &model.CommandResponse{}, nil
+	return &model.CommandResponse{
+		ResponseType: model.COMMAND_RESPONSE_TYPE_IN_CHANNEL,
+		Username:     bot.Username,
+		ChannelId:    args.ChannelId,
+		IconURL:      fmt.Sprintf("/plugins/%s/profile.png", manifest.ID),
+		Attachments: []*model.SlackAttachment{{
+			Id:         0,
+			Fallback:   "",
+			Color:      "#123456",
+			Pretext:    "",
+			AuthorName: "",
+			AuthorLink: "",
+			AuthorIcon: "",
+			Title:      fmt.Sprintf("Weather For %s", output.ParsedLocation),
+			TitleLink:  "",
+			Text:       output.String(),
+			Fields:     nil,
+			ImageURL:   "",
+			ThumbURL:   "",
+			Footer:     "",
+			FooterIcon: "",
+			Timestamp:  nil,
+			Actions:    nil,
+		}},
+		ExtraResponses: nil,
+	}, nil
 }
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	input := strings.TrimSpace(strings.TrimPrefix(args.Command, "/weather"))
@@ -152,4 +184,24 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	input = strings.TrimSpace(input)
 	return p.getCurrentConditions(c, args, input)
 
+}
+
+func (p *Plugin) handleProfileImage(w http.ResponseWriter, r *http.Request) {
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		p.API.LogError("Unable to get bundle path, err=" + err.Error())
+		return
+	}
+
+	img, err := os.Open(filepath.Join(bundlePath, "assets", "weather.png"))
+	if err != nil {
+		http.NotFound(w, r)
+		p.API.LogError("Unable to read profile image, err=" + err.Error())
+		return
+	}
+	defer img.Close()
+
+	w.Header().Set("Content-Type", "image/png")
+	io.Copy(w, img)
 }
