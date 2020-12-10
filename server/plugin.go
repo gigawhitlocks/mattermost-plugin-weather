@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -38,6 +39,15 @@ type WeatherRequest struct {
 }
 
 func (p *Plugin) OnActivate() (err error) {
+	configuration := p.getConfiguration()
+	if configuration.ClimaCellKey == "" {
+		return errors.New("ClimaCell API key was empty. Please provide one in the plugin settings")
+	}
+
+	if configuration.GeoKey == "" {
+		return errors.New("OpenCageData Geocoding API key was empty. Please provide one in the plugin settings")
+	}
+
 	p.botId, err = p.Helpers.EnsureBot(&model.Bot{
 		Username:    "weather",
 		DisplayName: "Weather",
@@ -122,7 +132,9 @@ func (p *Plugin) getMap(c *plugin.Context, args *model.CommandArgs, input string
 	}
 
 	location, features := p.prepareMapInput(input)
-	precipMap, err := climacell.BuildMap(location, features...)
+	configuration := p.getConfiguration()
+	cl := climacell.NewClimaCell(configuration.ClimaCellKey, configuration.GeoKey)
+	precipMap, err := cl.BuildMap(location, features...)
 	if err != nil {
 		return nil, model.NewAppError("getMap", err.Error(), nil, err.Error(), 500)
 	}
@@ -139,7 +151,10 @@ func (p *Plugin) getMap(c *plugin.Context, args *model.CommandArgs, input string
 }
 
 func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs, input string) (*model.CommandResponse, *model.AppError) {
-	obsv, err := climacell.CurrentConditions(input)
+
+	configuration := p.getConfiguration()
+	cl := climacell.NewClimaCell(configuration.ClimaCellKey, configuration.GeoKey)
+	obsv, err := cl.CurrentConditions(input)
 	if err != nil {
 		return nil, model.NewAppError("weather plugin", err.Error(), nil, err.Error(), 500)
 	}
@@ -219,7 +234,6 @@ func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*mo
 	}
 	input = strings.TrimSpace(input)
 	return p.getCurrentConditions(c, args, input)
-
 }
 
 func (p *Plugin) handleProfileImage(w http.ResponseWriter, r *http.Request) {

@@ -1,17 +1,30 @@
 {
-    "id": "business.silly.weather",
-    "name": "Weather Plugin",
-    "description": "This plugin provides integration with the ClimaCell API to provide weather conditions",
-    "version": "2.3.2",
-    "min_server_version": "5.29.0",
-    "server": {
-	"executables": {
-	    "linux-amd64": "server/dist/plugin-linux-amd64"
-	}
-    },
-    "settings_schema": {
-	"header": "",
-	"footer": "",
-	"settings": []
+  "id": "business.silly.weather",
+  "name": "Weather Plugin",
+  "description": "This plugin provides integration with the ClimaCell API to provide weather conditions",
+  "version": "2.4.1",
+  "min_server_version": "5.29.0",
+  "server": {
+    "executables": {
+      "linux-amd64": "server/dist/plugin-linux-amd64"
     }
+  },
+  "settings_schema": {
+    "header": "ClimaCell / OpenCageData Weather Plugin",
+    "footer": "",
+    "settings": [
+      {
+        "key": "ClimaCellKey",
+        "display_name": "ClimaCell API Key",
+        "type": "text",
+        "help_text": "Your API key from https://www.climacell.co/weather-api/"
+      },
+      {
+        "key": "GeoKey",
+        "display_name": "OpenCageData Geocoding API Key",
+        "type": "text",
+        "help_text": "Your API key from https://opencagedata.com/"
+      }
+    ]
+  }
 }
