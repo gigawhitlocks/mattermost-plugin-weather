@@ -128,7 +128,6 @@ func (p *Plugin) getPrecipMap(input string) (string, *model.AppError) {
 	if err != nil {
 		return "", model.NewAppError("getMap", "failed to build weather map", nil, "bbhhh", 500)
 	}
-	p.API.LogDebug(fmt.Sprintf("XXX map is %d bytes", len(precipMap)))
 
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
@@ -137,10 +136,9 @@ func (p *Plugin) getPrecipMap(input string) (string, *model.AppError) {
 
 	outfileName := fmt.Sprintf("%s.png", uuid.New().String())
 	fulloutfileName := filepath.Join(bundlePath, "assets", "map_images", outfileName)
-	p.API.LogDebug(fmt.Sprintf("XXX %s", fulloutfileName))
 	outfile, err := os.Create(fulloutfileName)
 	if err != nil {
-		return "", model.NewAppError("getMap", "failed to create map file", nil, "ggg", 500)
+		return "", model.NewAppError("getMap", "failed to create map file", nil, err.Error(), 500)
 	}
 	defer outfile.Close()
 	writer := bufio.NewWriter(outfile)
@@ -197,26 +195,16 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 
 	attachments := []*model.SlackAttachment{
 		{
-			Id:        0,
-			ImageURL:  weathermapLink,
-			Title:     fmt.Sprintf("Weather For %s", obsv.ParsedLocation),
-			TitleLink: "",
+			Id:       0,
+			ImageURL: weathermapLink,
+			Title:    fmt.Sprintf("Weather for %s", obsv.ParsedLocation),
+			Fallback: fmt.Sprintf("%s and feels like %.1f °%s", obsv.Title(), obsv.Temp.Value, obsv.Temp.Units),
+			Text: fmt.Sprintf("## %s and %.1f °%s",
+				obsv.Title(),
+				obsv.FeelsLike.Value,
+				obsv.FeelsLike.Units,
+			),
 			Fields: []*model.SlackAttachmentField{
-				{
-					Title: "Conditions",
-					Value: fmt.Sprintf("%s", obsv.Title()),
-					Short: false,
-				},
-				{
-					Title: "Temperature",
-					Value: fmt.Sprintf("%.1f° %s", obsv.Temp.Value, obsv.Temp.Units),
-					Short: true,
-				},
-				{
-					Title: "Feels Like",
-					Value: fmt.Sprintf("%.1f° %s", obsv.FeelsLike.Value, obsv.FeelsLike.Units),
-					Short: true,
-				},
 				{
 					Title: "Type of Precipitation",
 					Value: fmt.Sprintf("%s", obsv.PrecipitationType.Value),
@@ -251,10 +239,10 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 		},
 	}
 
-	if attachments[0].Fields[4].Value == "0.0" { // brittle but whatever
+	if attachments[0].Fields[1].Value == "0.0" { // brittle but whatever
 		// omits precipitation when it's not precipitating by deleting the
 		// two precipitation entries
-		attachments[0].Fields = append(attachments[0].Fields[:3], attachments[0].Fields[5:]...)
+		attachments[0].Fields = attachments[0].Fields[2:]
 	}
 
 	return &model.CommandResponse{

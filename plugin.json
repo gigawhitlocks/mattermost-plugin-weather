@@ -2,7 +2,7 @@
   "id": "business.silly.weather",
   "name": "Weather",
   "description": "This plugin provides integration with the ClimaCell weather API and the OpenCageData geocoding API to provide weather conditions",
-  "version": "2.4.1.1",
+  "version": "2.4.2",
   "min_server_version": "5.29.0",
   "server": {
     "executables": {
