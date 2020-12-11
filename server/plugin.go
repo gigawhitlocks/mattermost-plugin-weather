@@ -198,7 +198,6 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 			Id:       0,
 			ImageURL: weathermapLink,
 			Title:    fmt.Sprintf("Weather for %s", obsv.ParsedLocation),
-			Fallback: fmt.Sprintf("%s and feels like %.1f °%s", obsv.Title(), obsv.Temp.Value, obsv.Temp.Units),
 			Text: fmt.Sprintf("## %s and %.1f °%s",
 				obsv.Title(),
 				obsv.FeelsLike.Value,
