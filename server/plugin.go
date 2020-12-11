@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"io"
@@ -99,10 +100,11 @@ func (p *Plugin) OnActivate() (err error) {
 func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	switch path := r.URL.Path; path {
-	case "/profile.png":
+	if path := r.URL.Path; path == "/profile.png" {
 		p.handleProfileImage(w, r)
-	default:
+	} else if strings.HasSuffix(path, ".png") {
+		p.handleWeatherImage(w, r)
+	} else {
 		http.NotFound(w, r)
 	}
 }
@@ -110,7 +112,6 @@ func (p *Plugin) ServeHTTP(c *plugin.Context, w http.ResponseWriter, r *http.Req
 var featureFlagPattern *regexp.Regexp = regexp.MustCompile(`-[a-zA-Z_]+`)
 
 func (p *Plugin) prepareMapInput(input string) (string, []string) {
-	input = strings.TrimPrefix(input, "map ")
 	arguments := []string{}
 	for match := featureFlagPattern.FindStringIndex(input); match != nil; match = featureFlagPattern.FindStringIndex(input) {
 		argument := strings.TrimPrefix(input[match[0]:match[1]], "-")
@@ -120,7 +121,37 @@ func (p *Plugin) prepareMapInput(input string) (string, []string) {
 	return input, arguments
 }
 
-func (p *Plugin) getMap(c *plugin.Context, args *model.CommandArgs, input string) (*model.CommandResponse, *model.AppError) {
+func (p *Plugin) getPrecipMap(input string) (string, *model.AppError) {
+	configuration := p.getConfiguration()
+	cl := climacell.NewClimaCell(configuration.ClimaCellKey, configuration.GeoKey)
+	precipMap, err := cl.BuildMap(input, "precipitation")
+	if err != nil {
+		return "", model.NewAppError("getMap", "failed to build weather map", nil, "bbhhh", 500)
+	}
+	p.API.LogDebug(fmt.Sprintf("XXX map is %d bytes", len(precipMap)))
+
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		return "", model.NewAppError("getMap", "failed to get bundle path", nil, "ghg", 500)
+	}
+
+	outfileName := fmt.Sprintf("%s.png", uuid.New().String())
+	fulloutfileName := filepath.Join(bundlePath, "assets", "map_images", outfileName)
+	p.API.LogDebug(fmt.Sprintf("XXX %s", fulloutfileName))
+	outfile, err := os.Create(fulloutfileName)
+	if err != nil {
+		return "", model.NewAppError("getMap", "failed to create map file", nil, "ggg", 500)
+	}
+	defer outfile.Close()
+	writer := bufio.NewWriter(outfile)
+	_, err = writer.Write(precipMap)
+	if err != nil {
+		return "", model.NewAppError("getMap", "failed to write map to file", nil, "ghh", 500)
+	}
+	return fmt.Sprintf("/plugins/%s/%s", manifest.ID, outfileName), nil
+}
+
+func (p *Plugin) postMap(c *plugin.Context, args *model.CommandArgs, input string) (*model.CommandResponse, *model.AppError) {
 	// weathermap
 
 	user, _ := p.API.GetUser(args.UserId)
@@ -136,7 +167,7 @@ func (p *Plugin) getMap(c *plugin.Context, args *model.CommandArgs, input string
 	cl := climacell.NewClimaCell(configuration.ClimaCellKey, configuration.GeoKey)
 	precipMap, err := cl.BuildMap(location, features...)
 	if err != nil {
-		return nil, model.NewAppError("getMap", err.Error(), nil, err.Error(), 500)
+		return nil, model.NewAppError("postMap", err.Error(), nil, err.Error(), 500)
 	}
 	fileInfo, ferr := p.API.UploadFile(
 		precipMap, args.ChannelId,
@@ -159,9 +190,15 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 		return nil, model.NewAppError("weather plugin", err.Error(), nil, err.Error(), 500)
 	}
 
+	weathermapLink, aerr := p.getPrecipMap(input)
+	if aerr != nil {
+		return nil, aerr
+	}
+
 	attachments := []*model.SlackAttachment{
 		{
 			Id:        0,
+			ImageURL:  weathermapLink,
 			Title:     fmt.Sprintf("Weather For %s", obsv.ParsedLocation),
 			TitleLink: "",
 			Fields: []*model.SlackAttachmentField{
@@ -215,6 +252,8 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 	}
 
 	if attachments[0].Fields[4].Value == "0.0" { // brittle but whatever
+		// omits precipitation when it's not precipitating by deleting the
+		// two precipitation entries
 		attachments[0].Fields = append(attachments[0].Fields[:3], attachments[0].Fields[5:]...)
 	}
 
@@ -230,7 +269,8 @@ func (p *Plugin) getCurrentConditions(c *plugin.Context, args *model.CommandArgs
 func (p *Plugin) ExecuteCommand(c *plugin.Context, args *model.CommandArgs) (*model.CommandResponse, *model.AppError) {
 	input := strings.TrimSpace(strings.TrimPrefix(args.Command, "/weather"))
 	if strings.HasPrefix(input, "map") {
-		return p.getMap(c, args, input)
+		input = strings.TrimPrefix(input, "map ")
+		return p.postMap(c, args, input)
 	}
 	input = strings.TrimSpace(input)
 	return p.getCurrentConditions(c, args, input)
@@ -248,6 +288,25 @@ func (p *Plugin) handleProfileImage(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.NotFound(w, r)
 		p.API.LogError("Unable to read profile image, err=" + err.Error())
+		return
+	}
+	defer img.Close()
+
+	w.Header().Set("Content-Type", "image/png")
+	io.Copy(w, img)
+}
+
+func (p *Plugin) handleWeatherImage(w http.ResponseWriter, r *http.Request) {
+	bundlePath, err := p.API.GetBundlePath()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		p.API.LogError("Unable to get bundle path, err=" + err.Error())
+		return
+	}
+	img, err := os.Open(filepath.Join(bundlePath, "assets", "map_images") + r.URL.Path)
+	if err != nil {
+		http.NotFound(w, r)
+		p.API.LogError("Unable to read map image, err=" + err.Error())
 		return
 	}
 	defer img.Close()
