@@ -126,12 +126,12 @@ func (p *Plugin) getPrecipMap(input string) (string, *model.AppError) {
 	cl := climacell.NewClimaCell(configuration.ClimaCellKey, configuration.GeoKey)
 	precipMap, err := cl.BuildMap(input, "precipitation")
 	if err != nil {
-		return "", model.NewAppError("getMap", "failed to build weather map", nil, "bbhhh", 500)
+		return "", model.NewAppError("getMap", "failed to build weather map", nil, err.Error(), 500)
 	}
 
 	bundlePath, err := p.API.GetBundlePath()
 	if err != nil {
-		return "", model.NewAppError("getMap", "failed to get bundle path", nil, "ghg", 500)
+		return "", model.NewAppError("getMap", "failed to get bundle path", nil, err.Error(), 500)
 	}
 
 	outfileName := fmt.Sprintf("%s.png", uuid.New().String())
@@ -144,7 +144,7 @@ func (p *Plugin) getPrecipMap(input string) (string, *model.AppError) {
 	writer := bufio.NewWriter(outfile)
 	_, err = writer.Write(precipMap)
 	if err != nil {
-		return "", model.NewAppError("getMap", "failed to write map to file", nil, "ghh", 500)
+		return "", model.NewAppError("getMap", "failed to write map to file", nil, err.Error(), 500)
 	}
 	return fmt.Sprintf("/plugins/%s/%s", manifest.ID, outfileName), nil
 }
