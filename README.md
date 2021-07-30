@@ -1,3 +1,7 @@
+# Notice: This plugin is currently broken
+
+This plugin relies on OpenWeatherMap for base maps and something on their API changed, causing image creation to fail in this plugin. I haven't had the time to investigate it, so for the time being the plugin doesn't work. If you're reading this and would like to use this plugin, I'd love a contribution, but you will probably want to message me and ask for some help because neither this repository nor the weather library repo it draws from are particularly well organized
+
 # A Mattermost Weather Plugin
 ## Summary
 A small Mattermost plugin that shows current weather data using the ClimaCell API for weather data and the OpenCageData API for geocoding.
